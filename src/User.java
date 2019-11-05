@@ -84,7 +84,7 @@ class User {
     }
 
     private void runJudge() throws IOException, InterruptedException {
-        System.out.println("-----------Edit Solution-------------------");
+        System.out.println("-----------Submit Solution-----------------");
         System.out.println("-------------------------------------------");
         System.out.print("Enter problem ID: ");
 
