@@ -37,7 +37,6 @@ public class Submission {
         run.redirectOutput(new File(dirPath + "/TESTOUT"));
         Process runProcess = run.start();
         runProcess.waitFor(1, TimeUnit.SECONDS);
-        runProcess.info();
 
         if (runProcess.isAlive()) {
             runProcess.destroyForcibly();
