@@ -3,28 +3,34 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class Submission {
-    private String dirPath = null;
+    private String probPath = null;
+    private String userSolPath = null;
     private String verdict = null;
-    public Problem problem = null;
 
-    Submission(Problem prob){
-        dirPath = System.getProperty("user.home") + "/OJ" + "/Problems/" + prob.problemId;
+    Submission(String probPath, String userSolPath){
+        this.probPath = probPath;
+        this.userSolPath = userSolPath;
         verdict = "Not Judged yet";
-        problem = prob;
+    }
+
+    private void clean() throws IOException {
+        ProcessBuilder PB = new ProcessBuilder();
+        PB.directory(new File(probPath));
+        PB.command("rm", "Run", "DiffOut", "TESTOUT", "ProcessError", "ProcessOut");
+        PB.start();
     }
 
     String judge() throws InterruptedException, IOException {
-        File problemDir = new File(dirPath);
-
+        File problemDir = new File(probPath);
         ProcessBuilder init = new ProcessBuilder();
 
         init.directory(problemDir);
-        init.redirectError(new File(dirPath + "/ProcessError"));
-        init.redirectOutput(new File(dirPath + "/ProcessOut"));
+        init.redirectError(new File(problemDir + "/ProcessError"));
+        init.redirectOutput(new File(problemDir + "/ProcessOut"));
 
         /**Compilation*/
         ProcessBuilder compile = init;
-        compile.command("g++", "-O2", "-static", "-std=c++17", "-DONLINE-JUDGE", "-Wall", "Solution.cpp", "-o", "Run");
+        compile.command("g++", "-O2", "-static", "-std=c++17", "-DONLINE-JUDGE", "-Wall", userSolPath + "/" + "Solution.cpp", "-o", "Run");
         Process compileProcess = compile.start();
         compileProcess.waitFor();
 
@@ -33,13 +39,15 @@ public class Submission {
 
         /**Run code*/
         ProcessBuilder run = init;
+        run.redirectInput(new File(problemDir + "/JUDGEIN"));
+        run.redirectOutput(new File(probPath + "/TESTOUT"));
         run.command("./Run");
-        run.redirectOutput(new File(dirPath + "/TESTOUT"));
         Process runProcess = run.start();
-        runProcess.waitFor(1, TimeUnit.SECONDS);
+        runProcess.waitFor(3, TimeUnit.SECONDS);
 
         if (runProcess.isAlive()) {
             runProcess.destroyForcibly();
+            clean();
             return verdict = "Time limit exceed";
         }
 
@@ -49,7 +57,7 @@ public class Submission {
             return verdict = "Runtime error";
         } else {
 
-            File diffFile = new File(dirPath + "/DiffOut");
+            File diffFile = new File(probPath + "/DiffOut");
 
             ProcessBuilder diff = init;
             diff.command("diff", "TESTOUT", "JUDGEOUT");
@@ -58,8 +66,14 @@ public class Submission {
 
             diffProcess.waitFor();
 
-            if (diffFile.length() == 0) return verdict = "Accepted";
-            else return verdict = "Wrong Answer";
+            if (diffFile.length() == 0){
+                clean();
+                return verdict = "Accepted";
+            }
+            else {
+                clean();
+                return verdict = "Wrong Answer";
+            }
 
         }
     }
@@ -68,11 +82,5 @@ public class Submission {
         return verdict;
     }
 
-    void editSol() throws IOException {
-        ProcessBuilder edit = new ProcessBuilder();
-        edit.directory(new File(dirPath));
-        System.out.println(dirPath);
-        edit.command("xdg-open", "Solution.cpp");
-        edit.start();
-    }
+
 }

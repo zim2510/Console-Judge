@@ -1,70 +1,101 @@
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-public class User {
-    String userId;
-    Map<String, Submission> submissionList;
-    ArrayList <Problem> problemList;
-    Scanner cin = new Scanner(System.in);
+class User {
+
+    private static String basePath = System.getProperty("user.home") + "/CJ/Users";
+
+    private String userId = null;
+    private String userPath = null;
+
+    private HashMap<String, Problem> problemHashMap = null;
+    private ArrayList <String> problemList = null;
+
+    private Scanner cin = new Scanner(System.in);
 
     User(String userId){
         this.userId = userId;
+        this.userPath = basePath + "/" + userId;
+
+        if(!new File(userPath).exists()){
+            throw new Error("User doesn't exist");
+        }
+
         problemList = Problem.getProblemList();
-        submissionList = new HashMap();
-        for(Problem tmp: problemList){
-            Submission s = new Submission(tmp);
-            submissionList.put(tmp.problemId, s);
+
+        problemHashMap = new HashMap();
+
+        for(String tmp: problemList){
+            problemHashMap.put(tmp, new Problem(tmp));
         }
     }
 
-    public void viewProblemList(){
+    private void viewProblemList(){
         System.out.println("-----------Problem List--------------------");
         System.out.println("-------------------------------------------");
-        for (Problem p : problemList) System.out.println(" " + p.problemId);
+        for (String p : problemList) System.out.println(" " + p);
         System.out.println("");
     }
 
-    public void viewProblem(){
+    private void viewProblem(){
         System.out.println("-----------View Problem--------------------");
         System.out.println("-------------------------------------------");
         System.out.print("Enter problem ID: ");
         String problemId = cin.next();
-        Submission s = submissionList.get(problemId);
+        Problem s = problemHashMap.get(problemId);
         if(s!=null){
             try {
-                s.problem.view();
+                s.view();
             } catch (Exception e) {
-                System.out.println("Error occured. No one knows why.");
+                System.out.println("Error occurred. No one knows why.");
             }
         }
         else System.out.println("Invalid problem ID");
         System.out.println("");
     }
 
-    public void editSol() throws IOException {
+    private void editSol() throws IOException {
         System.out.println("-----------Edit Solution-------------------");
         System.out.println("-------------------------------------------");
         System.out.print("Enter problem ID: ");
+
         String problemId = cin.next();
-        Submission s = submissionList.get(problemId);
-        if(s!=null) s.editSol();
+        Problem p = problemHashMap.get(problemId);
+
+        if(p!=null){
+            File solDir = new File(userPath + "/" + problemId);
+
+            if(!solDir.exists()){
+                solDir.mkdir();
+                new File(solDir + "/Solution.cpp").createNewFile();
+            }
+
+            ProcessBuilder editPB = new ProcessBuilder();
+            editPB.directory(solDir);
+            editPB.command("xdg-open", "Solution.cpp");
+            editPB.start();
+        }
         else System.out.println("Invalid problem ID");
         System.out.println("");
     }
 
-    public void runJudge() throws IOException, InterruptedException {
+    private void runJudge() throws IOException, InterruptedException {
         System.out.println("-----------Edit Solution-------------------");
         System.out.println("-------------------------------------------");
         System.out.print("Enter problem ID: ");
+
         String problemId = cin.next();
-        Submission s = submissionList.get(problemId);
-        if(s!=null){
-            System.out.println("Problem Submitted\nWait for verdict");
-            System.out.println("Verdict: " + s.judge());
+
+        if(problemHashMap.get(problemId)!=null){
+            Submission tmpSub = new Submission(problemHashMap.get(problemId).problemPath, userPath + "/" + problemId);
+            System.out.print("Solution Submitted\nWait for verdict\n");
+            System.out.println("Verdict: " + tmpSub.judge());
         }
+
         else System.out.println("Invalid problem ID");
         System.out.println("");
     }
@@ -80,8 +111,8 @@ public class User {
             System.out.println("4. Submit Solution");
             System.out.println("5. View User Statistics");
             System.out.println("0. Exit");
-
             System.out.print("\nEnter choice (0 - 4): ");
+
             int x = cin.nextInt();
             System.out.println("");
 
@@ -94,3 +125,4 @@ public class User {
     }
 
 }
+

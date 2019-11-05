@@ -3,14 +3,16 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
-        File OJbase = new File(System.getProperty("user.home") + "/OJ");
-        if(!OJbase.exists()){
-            OJbase.mkdir();
-            new File(System.getProperty("user.home") + "/OJ/Users").mkdir();
-            new File(System.getProperty("user.home") + "/OJ/Problems").mkdir();
+        File CJbase = new File(System.getProperty("user.home") + "/CJ");
+
+        if(!CJbase.exists()){
+            CJbase.mkdir();
+            new File(System.getProperty("user.home") + "/CJ/Users").mkdir();
+            new File(System.getProperty("user.home") + "/CJ/Problems").mkdir();
 
         }
-        User defaultUser = new User("Jim");
+        ///TODO: Login Page
+        User defaultUser = new User("TestUser");
         defaultUser.beginRender();
     }
 
