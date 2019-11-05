@@ -5,6 +5,7 @@
 1. Java 11+
 2. Ubuntu 16.04 or better
 3. Sublime Text 3
+4. G++
 
 ### How to use
 
